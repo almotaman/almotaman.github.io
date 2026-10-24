@@ -1,0 +1,36 @@
+:root {
+  color-scheme: dark;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #10131a;
+  color: #f5f7fa;
+  --panel: #1a1f29;
+  --muted: #aab3c2;
+  --accent: #61e294;
+  --danger: #ff8b8b;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; background: #10131a; }
+.app-header { padding: 1.1rem 1rem .9rem; border-bottom: 1px solid #2c3442; }
+.brand { color: var(--accent); font-size: .8rem; font-weight: 800; letter-spacing: .14em; }
+.machine-name { margin-top: .35rem; font-size: 1.25rem; font-weight: 700; text-transform: capitalize; }
+.app-shell { width: min(100% - 2rem, 32rem); margin: 0 auto; padding: 1.5rem 0; }
+.screen h1 { margin: 0 0 .5rem; font-size: clamp(2rem, 9vw, 3rem); }
+.intro, .greeting { color: var(--muted); }
+form { margin-top: 1.5rem; }
+label { display: block; margin: 1rem 0 .4rem; color: var(--muted); font-weight: 650; }
+input { width: 100%; min-height: 3.5rem; padding: .7rem .85rem; border: 2px solid #384354; border-radius: .7rem; background: var(--panel); color: inherit; font-size: 1.35rem; }
+input:focus { outline: 3px solid #61e29466; border-color: var(--accent); }
+.input-row { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
+button { min-height: 3rem; border: 0; border-radius: .7rem; font: inherit; font-weight: 750; cursor: pointer; }
+.primary-button { width: 100%; margin-top: 1.3rem; background: var(--accent); color: #07130b; font-size: 1.2rem; }
+.primary-button:disabled { opacity: .55; cursor: wait; }
+.secondary-button { width: 100%; margin-top: .8rem; background: #303949; color: inherit; }
+.error { min-height: 1.3rem; margin: .7rem 0 0; color: var(--danger); }
+.confirmation { margin-top: 1.4rem; padding: 1rem; border-radius: .8rem; background: var(--panel); }
+.confirmation span { display: block; margin-top: .4rem; color: var(--muted); }
+.timer { margin: .8rem 0; color: var(--accent); font-size: 2.5rem; font-variant-numeric: tabular-nums; font-weight: 800; text-align: center; }
+footer { padding: 1rem; text-align: center; }
+.link-button { min-height: 2.5rem; background: transparent; color: var(--muted); text-decoration: underline; }
+[hidden] { display: none !important; }
+@media (min-height: 700px) { .app-shell { padding-top: 2.5rem; } }
