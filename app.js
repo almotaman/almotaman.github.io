@@ -14,6 +14,10 @@ const machineName = machineId.replace(/-/g, " ").replace(/\b\w/g, (letter) => le
 const $ = (id) => document.getElementById(id);
 let timerId;
 
+function restStorageKey() {
+  return `rest_started_at_${machineId}`;
+}
+
 function identity() {
   return { token: localStorage.getItem("member_token"), name: localStorage.getItem("member_name") };
 }
@@ -72,15 +76,27 @@ async function syncQueue() {
   if (remaining.length) setError("set-error", strings.syncFailed);
 }
 
-function startTimer(seconds = 90) {
+function formatElapsed(milliseconds) {
+  const totalSeconds = Math.max(0, Math.floor(milliseconds / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = String(totalSeconds % 60).padStart(2, "0");
+  return `${minutes}:${seconds}`;
+}
+
+function startRestTimer(label = "Rest") {
   clearInterval(timerId);
+  const storedStartedAt = localStorage.getItem(restStorageKey());
+  const startedAt = Number(storedStartedAt);
   const timer = $("timer");
-  let remaining = Math.max(0, Number(seconds) || 90);
-  timer.textContent = `${remaining}s`;
+  if (storedStartedAt === null || !Number.isFinite(startedAt)) {
+    $("confirmation").hidden = true;
+    return;
+  }
+  $("timer-label").textContent = label;
+  const updateTimer = () => { timer.textContent = formatElapsed(Date.now() - startedAt); };
+  updateTimer();
   timerId = setInterval(() => {
-    remaining -= 1;
-    timer.textContent = `${Math.max(0, remaining)}s`;
-    if (remaining <= 0) clearInterval(timerId);
+    updateTimer();
   }, 1000);
 }
 
@@ -90,6 +106,12 @@ function renderSetScreen() {
   $("set-machine-name").textContent = machineName;
   const previous = JSON.parse(localStorage.getItem(`last_set_${machineId}`) || "null");
   if (previous) { $("weight").value = previous.weight_kg; $("reps").value = previous.reps; }
+  if (localStorage.getItem(restStorageKey())) {
+    $("confirmation-message").textContent = "Set logged.";
+    $("rest-message").textContent = "";
+    $("confirmation").hidden = false;
+    startRestTimer("Resting since your last set");
+  }
   showScreen("set");
 }
 
@@ -133,10 +155,11 @@ async function logSet(event) {
     }
     if (!result.ok) return setError("set-error", result.error || "Could not log set.");
     localStorage.setItem(`last_set_${machineId}`, JSON.stringify({ weight_kg: weight, reps }));
+    localStorage.setItem(restStorageKey(), String(Date.now()));
     $("confirmation-message").textContent = result.set_number ? `Set ${result.set_number} logged.` : "Set logged.";
-    $("rest-message").textContent = typeof result.rest_seconds === "number" ? `Rest since last set: ${result.rest_seconds}s` : "";
+    $("rest-message").textContent = typeof result.rest_seconds === "number" ? `Rested ${result.rest_seconds} sec since last set` : "";
     $("confirmation").hidden = false;
-    startTimer(typeof result.rest_seconds === "number" ? result.rest_seconds : 90);
+    startRestTimer();
   } catch {
     saveQueue(item);
     $("confirmation-message").textContent = strings.networkSaved;
@@ -148,7 +171,11 @@ async function logSet(event) {
 $("machine-name").textContent = machineName;
 $("enroll-form").addEventListener("submit", enroll);
 $("set-form").addEventListener("submit", logSet);
-$("skip-button").addEventListener("click", () => { clearInterval(timerId); $("timer").textContent = "Ready"; });
+$("skip-button").addEventListener("click", () => {
+  clearInterval(timerId);
+  localStorage.removeItem(restStorageKey());
+  $("timer").textContent = "Ready";
+});
 $("not-you").addEventListener("click", () => { localStorage.removeItem("member_token"); localStorage.removeItem("member_name"); showScreen("enroll"); });
 window.addEventListener("online", syncQueue);
 if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("./service-worker.js"));
